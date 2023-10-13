@@ -14,7 +14,7 @@ services:
     networks:
         - "chatapp-network"
     environment:
-        - ConnectionStrings__DefaultConnection=
+        - ConnectionStrings__DefaultConnection=${SqlConnectionString}
 
   postgres:
     container_name: chatapp_postgres
@@ -27,8 +27,8 @@ services:
     volumes:
         - postgres_chatapp_data:/var/lib/postgresql/data/
     environment:
-        POSTGRES_USER: root
-        POSTGRES_PASSWORD: root
+        POSTGRES_USER: ${POSTGRES_USER}
+        POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
         POSTGRES_DB: chatapp
         PGDATA: /var/lib/postgresql/data/
 
@@ -37,8 +37,8 @@ services:
     image: dpage/pgadmin4
     restart: on-failure:3
     environment:
-        PGADMIN_DEFAULT_EMAIL: admin@admin.com
-        PGADMIN_DEFAULT_PASSWORD: root
+        PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+        PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
     ports:
       - "5050:80"
     networks:
