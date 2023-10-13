@@ -2,6 +2,7 @@ version: '3.4'
 
 services:
   chatapp:
+    container_name: ChatApp
     image: ${DOCKER_REGISTRY-}chatapp
     build:
       context: .
@@ -12,6 +13,8 @@ services:
         - "5000:80"
     networks:
         - "chatapp-network"
+    environment:
+        - ConnectionStrings__DefaultConnection=
 
   postgres:
     container_name: chatapp_postgres
@@ -28,6 +31,19 @@ services:
         POSTGRES_PASSWORD: root
         POSTGRES_DB: chatapp
         PGDATA: /var/lib/postgresql/data/
+
+  pgadmin:
+    container_name: pgadmin4_container
+    image: dpage/pgadmin4
+    restart: on-failure:3
+    environment:
+        PGADMIN_DEFAULT_EMAIL: admin@admin.com
+        PGADMIN_DEFAULT_PASSWORD: root
+    ports:
+      - "5050:80"
+    networks:
+        - "chatapp-network"
+
 
 networks:
     chatapp-network:
