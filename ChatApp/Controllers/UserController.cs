@@ -1,5 +1,9 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using ChatApp.Data;
+using ChatApp.DTO;
+using ChatApp.Services;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 namespace ChatApp.Controllers
 {
@@ -7,5 +11,50 @@ namespace ChatApp.Controllers
     [ApiController]
     public class UserController : ControllerBase
     {
+        private readonly ILogger<UserController> _logger;
+        private readonly IUserServices _userServices;
+
+        public UserController(ILogger<UserController> logger, IUserServices userServices)
+        {
+            _logger = logger;
+            _userServices = userServices;
+        }
+
+        [HttpPost("Register")]
+        public async Task<IActionResult> Register(UserRegistrationDTO userRegistrationDTO)
+        {
+            try
+            {
+                _logger.LogInformation("User Registration.");
+                await _userServices.PasswordRegister(userRegistrationDTO);
+                return Ok();
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e.ToString());
+                return BadRequest(e.Message);
+            }
+        }
+
+        [HttpPost("Login")]
+        public async Task<IActionResult> Login(UserLoginDTO userLoginDTO)
+        {
+            try
+            {
+                _logger.LogInformation("User Login", userLoginDTO.Username);
+                string token = await _userServices.PasswordLogin(userLoginDTO);
+
+                if (token == null)
+                {
+                    return BadRequest("");
+                }
+
+                Response.Cookies.Append("Chat-Access-Token", "Bearer " + token, new CookieOptions() { HttpOnly = true, SameSite = SameSiteMode.Strict });
+                return Ok();
+            }
+            catch (Exception e) {
+                return BadRequest(e.Message);
+            }
+        }
     }
 }
