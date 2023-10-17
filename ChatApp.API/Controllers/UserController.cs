@@ -1,6 +1,7 @@
 ﻿using ChatApp.Data;
 using ChatApp.DTO;
 using ChatApp.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -20,6 +21,7 @@ namespace ChatApp.Controllers
             _userServices = userServices;
         }
 
+        [AllowAnonymous]
         [HttpPost("Register")]
         public async Task<IActionResult> Register(UserRegistrationDTO userRegistrationDTO)
         {
@@ -36,6 +38,7 @@ namespace ChatApp.Controllers
             }
         }
 
+        [AllowAnonymous]
         [HttpPost("Login")]
         public async Task<IActionResult> Login(UserLoginDTO userLoginDTO)
         {
@@ -46,7 +49,7 @@ namespace ChatApp.Controllers
 
                 if (token == null)
                 {
-                    return BadRequest("");
+                    return BadRequest();
                 }
 
                 Response.Cookies.Append("Chat-Access-Token", "Bearer " + token, new CookieOptions() { HttpOnly = true, SameSite = SameSiteMode.Strict });

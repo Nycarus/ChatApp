@@ -1,18 +1,37 @@
 version: '3.4'
 
 services:
-  chatapp:
-    container_name: ChatApp
-    image: ${DOCKER_REGISTRY-}chatapp
+  chatapp_api:
+    container_name: ChatApp_API
+    image: chatapp_api
     build:
       context: .
-      dockerfile: ChatApp/Dockerfile
+      dockerfile: ChatApp.API/Dockerfile
     depends_on:
         - postgres
     ports:
-        - "5000:80"
+        - "5000:5000"
+    environment:
+        ASPNETCORE_URLS: "http://+:5000"
+        ASPNETCORE_ENVIRONMENT: "Development"
     networks:
-        - "chatapp-network"
+        - chatapp-network
+
+  chatapp_client:
+    container_name: ChatApp_Client
+    image: chatapp_client
+    build:
+        context: .
+        dockerfile: ChatApp.Client/Dockerfile
+    depends_on:
+        - postgres
+        - chatapp_api
+    ports:
+        - "4000:4000"
+    environment:
+        ASPNETCORE_URLS: "http://+:4000"
+    networks:
+        - chatapp-network
 
   postgres:
     container_name: chatapp_postgres
@@ -20,8 +39,6 @@ services:
     restart: on-failure:3
     ports:
         - "5432:5432"
-    networks:
-        - "chatapp-network"
     volumes:
         - postgres_chatapp_data:/var/lib/postgresql/data/
     environment:
@@ -29,6 +46,8 @@ services:
         POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
         POSTGRES_DB: chatapp
         PGDATA: /var/lib/postgresql/data/
+    networks:
+        - chatapp-network
 
   pgadmin:
     container_name: pgadmin4_container
@@ -43,11 +62,11 @@ services:
     ports:
       - "5050:5050"
     networks:
-        - "chatapp-network"
-
-networks:
-    chatapp-network:
-        driver: bridge
+        - chatapp-network
 
 volumes:
     postgres_chatapp_data:
+    
+networks:
+    chatapp-network:
+        driver: bridge

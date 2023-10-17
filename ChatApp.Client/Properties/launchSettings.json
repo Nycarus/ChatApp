@@ -1,13 +1,13 @@
 {
   "profiles": {
-    "ChatApp": {
+    "Chatapp.Client": {
       "commandName": "Project",
       "launchBrowser": true,
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       },
       "dotnetRunMessages": true,
-      "applicationUrl": "https://localhost:7043;http://localhost:5254"
+      "applicationUrl": "https://localhost:7034;http://localhost:5264"
     },
     "IIS Express": {
       "commandName": "IISExpress",
@@ -21,18 +21,18 @@
       "launchBrowser": true,
       "launchUrl": "{Scheme}://{ServiceHost}:{ServicePort}",
       "environmentVariables": {
-        "ASPNETCORE_URLS": "https://+:443;http://+:80"
+        "ASPNETCORE_URLS": "https://+:4000;http://+:4001"
       },
       "publishAllPorts": true,
-      "useSSL": true
+      "useSSL": false
     }
   },
   "iisSettings": {
     "windowsAuthentication": false,
     "anonymousAuthentication": true,
     "iisExpress": {
-      "applicationUrl": "http://localhost:3581",
-      "sslPort": 44347
+      "applicationUrl": "http://localhost:60467",
+      "sslPort": 0
     }
   }
 }
