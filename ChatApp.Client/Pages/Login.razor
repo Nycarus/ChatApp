@@ -1,0 +1,77 @@
+﻿@using DtoLibrary;
+@using Newtonsoft.Json
+@inject IHttpClientFactory HttpClientFactory
+@inject NavigationManager Navigation
+@inject IJSRuntime jsRuntime
+@inject IConfiguration Configuration
+
+@page "/login"
+
+<PageTitle>Login</PageTitle>
+
+<div class="form-group">
+    <label>
+        Username:
+        <input @bind="username"/>
+    </label>
+</div>
+<div class="form-group">
+    <label>
+        Password:
+        <input @bind="password"/>
+    </label>
+</div>
+<div class="form-group">
+    <button class="btn btn-primary" @onclick="UserLogin" disabled="@disableButton">
+        Login
+    </button>
+</div>
+
+@code {
+    private string? username;
+    private string? password;
+    private bool disableButton = false;
+
+    private async Task UserLogin()
+    {
+        await jsRuntime.InvokeVoidAsync("console.log", "Rip");
+        if (username == null || password == null)
+        {
+            Console.WriteLine("rip");
+            return;
+        }
+
+        disableButton = true;
+        StateHasChanged();
+        UserLoginDTO loginDto = new UserLoginDTO()
+        {
+            Username = username,
+            Password = password
+        };
+
+        try
+        {
+            HttpClient httpClient = HttpClientFactory.CreateClient();
+            var data = new StringContent(JsonConvert.SerializeObject(loginDto), System.Text.Encoding.UTF8, "application/json");
+            var response = await httpClient.PostAsync($"{Configuration.GetSection("API").Value}/api/user/login", data);
+
+            if (response.IsSuccessStatusCode)
+            {
+                await jsRuntime.InvokeVoidAsync("console.log", "Success");
+                Navigation.NavigateTo("/", true);
+            }
+            else
+            {
+                await jsRuntime.InvokeVoidAsync("console.log", response.StatusCode,response.ReasonPhrase);
+            }
+        }
+        catch(Exception e)
+        {
+            await jsRuntime.InvokeVoidAsync("console.log", e.Message);
+        }
+
+
+        disableButton = false;
+        StateHasChanged();
+    }
+}

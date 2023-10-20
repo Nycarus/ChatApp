@@ -1,4 +1,4 @@
-﻿namespace ChatApp.DTO
+﻿namespace ChatApp.DtoLibrary
 {
     public class UserLoginDTO
     {

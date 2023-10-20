@@ -1,6 +1,7 @@
 ﻿using ChatApp.Data;
-using ChatApp.DTO;
+using ChatApp.DtoLibrary;
 using ChatApp.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -52,11 +53,27 @@ namespace ChatApp.Controllers
                     return BadRequest();
                 }
 
-                Response.Cookies.Append("Chat-Access-Token", "Bearer " + token, new CookieOptions() { HttpOnly = true, SameSite = SameSiteMode.Strict });
+                Response.Cookies.Append("Chat-Access-Token", token, new CookieOptions() { HttpOnly = true, SameSite = SameSiteMode.Strict });
                 return Ok();
             }
             catch (Exception e) {
                 return BadRequest(e.Message);
+            }
+        }
+
+        [Authorize]
+        [HttpGet("Auth")]
+        public async Task<IActionResult> Auth()
+        {
+            try 
+            {
+                _logger.LogInformation("Auth");
+                return Ok();
+            } 
+            catch (Exception e)
+            {
+                _logger.LogError(e.Message, e);
+                return StatusCode(500);
             }
         }
     }

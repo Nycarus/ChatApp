@@ -1,4 +1,5 @@
-﻿using ChatApp.Models;
+﻿using ChatApp.API.Models;
+using ChatApp.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
@@ -35,7 +36,10 @@ namespace ChatApp.Data
             base.OnModelCreating(modelBuilder);
         }
 
-        public DbSet<UserModel> Users { get; set; }
-        public DbSet<UserProfileModel> UserProfiles { get; set; }
+        public DbSet<User> Users { get; set; }
+        public DbSet<UserProfile> UserProfiles { get; set; }
+
+        public DbSet<ChatRoom> ChatRooms { get; set; }
+        public DbSet<ChatRoomUsers> ChatRoomUsers { get; set;}
     }
 }

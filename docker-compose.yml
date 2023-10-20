@@ -30,6 +30,7 @@ services:
         - "4000:4000"
     environment:
         ASPNETCORE_URLS: "http://+:4000"
+        ASPNETCORE_ENVIRONMENT: "Development"
     networks:
         - chatapp-network
 

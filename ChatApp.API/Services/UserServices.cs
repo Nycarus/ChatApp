@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
 using ChatApp.Data;
-using ChatApp.DTO;
+using ChatApp.DtoLibrary;
 using ChatApp.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
@@ -41,15 +41,15 @@ namespace ChatApp.Services
             }
 
             // Create new user and profile
-            UserModel userModel = new UserModel();
+            User userModel = new User();
             userModel.Username = userRegistrationDTO.Username; 
             userModel.Password = BCrypt.Net.BCrypt.HashPassword(userRegistrationDTO.Password);
             _dataContext.Users.Add(userModel);
             await _dataContext.SaveChangesAsync();
 
-            UserProfileModel profileModel = new UserProfileModel();
+            UserProfile profileModel = new UserProfile();
             profileModel.Username = userRegistrationDTO.Username;
-            profileModel.UserModel = userModel;
+            profileModel.User = userModel;
             _dataContext.UserProfiles.Add(profileModel);
             await _dataContext.SaveChangesAsync();
         }
@@ -65,10 +65,19 @@ namespace ChatApp.Services
                 throw new Exception("Username or Password is incorrect.");
             }
 
+            var userProfile = _dataContext.UserProfiles.SingleOrDefault(o => o.UserId == existingUser.Id);
+
+            if (userProfile == null)
+            {
+                _logger.LogError("Unable to retrieve user profile:", userLoginDTO.Username);
+                throw new Exception("Something went wrong retrieving user profile.");
+            }
+
             // Create JWT
             var claim = new List<Claim>
             {
                 new Claim(ClaimTypes.Name, userLoginDTO.Username),
+                new Claim("UserProfileId", userProfile.Id.ToString()),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };
 

@@ -1,7 +1,9 @@
+using ChatApp.API.Services;
 using ChatApp.Data;
 using ChatApp.Hubs;
 using ChatApp.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -10,7 +12,7 @@ using System.Text;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllers();
 builder.Services.AddDbContext<DataContext>(options => options.UseNpgsql(
     builder.Configuration.GetConnectionString("DefaultConnection"))
 );
@@ -43,9 +45,15 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddAuthorization();
 builder.Services.AddAutoMapper(typeof(Program).Assembly);
 builder.Services.AddSignalR();
+builder.Services.AddResponseCompression(opts =>
+{
+    opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(
+       new[] { "application/octet-stream" });
+});
 
 // Dependency Injection
 builder.Services.AddScoped<IUserServices, UserServices>();
+builder.Services.AddScoped<IChatServices, ChatServices>();
 
 var app = builder.Build();
 
@@ -69,6 +77,7 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
-app.MapHub<ChatHub>("chat");
+app.MapHub<ChatHub>("/signalr/hubs/chat");
+app.UseResponseCompression();
 
 app.Run();
