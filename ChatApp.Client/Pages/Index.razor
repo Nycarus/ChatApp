@@ -10,6 +10,7 @@
 @using System.Security.Claims
 @using ChatApp.Client.Data
 @using Microsoft.AspNetCore.Http
+@using System.Net;
 
 <PageTitle>Index</PageTitle>
 
@@ -28,6 +29,11 @@
 
 <hr>
 
+<div>
+    @stuff
+    @errorMessage
+</div>
+
 <ul id="messagesList">
     @foreach (string message in currentServer.messages)
     {
@@ -41,6 +47,8 @@
     private List<ChatRoom> chatRooms = new List<ChatRoom>();
     private ChatRoom currentServer = new ChatRoom();
     private string? messageInput;
+    private string errorMessage = "";
+    private string stuff;
 
     protected override async Task OnInitializedAsync()
     {
@@ -52,15 +60,21 @@
             Navigation.NavigateTo($"/login", true);
         }
 
-        string? url = Configuration.GetValue<string>("ChatUrl");
+        string? url = Configuration.GetSection("ChatUrl").Value;
         if (url == null)
         {
             return;
         }
 
+        string token = response.Content.ReadAsStringAsync().Result;
+
         try {
             hubConnection = new HubConnectionBuilder()
-                .WithUrl(url)
+                .WithUrl(url, options =>
+                {
+                    options.AccessTokenProvider = () => Task.FromResult(token);
+                })
+                .WithAutomaticReconnect()
                 .Build();
 
             hubConnection.On<int, string, string>("ReceiveMessage", (roomId, user, message) =>
@@ -83,11 +97,12 @@
                 }
             });
 
+            StateHasChanged();
             await hubConnection.StartAsync();
         }
         catch(Exception e)
         {
-            Logger.LogInformation(e.Message, e);
+            errorMessage = e.Message;
         }
     }
 

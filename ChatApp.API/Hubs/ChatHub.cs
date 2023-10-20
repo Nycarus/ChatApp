@@ -89,7 +89,6 @@ namespace ChatApp.Hubs
 
         }
 
-
         private int getUserProfileId()
         {
             var user = Context.User;

@@ -8,36 +8,53 @@
 @page "/login"
 
 <PageTitle>Login</PageTitle>
+<card class="card text-center" style="width:80%;min-width:500px;padding:50px;margin:auto;">
+    <div class="form-group row">
+        <label for="usernameInput" class="col-sm-2 col-form-label">
+            Username:
+        </label>
 
-<div class="form-group">
-    <label>
-        Username:
-        <input @bind="username"/>
+        <div class="col-sm-10">
+            <input class="form-control" id="usernameInput" placeholder="Enter Username" @bind="username" />
+        </div>
+    </div>
+
+    <label style="height:30px;color:red">
+        @usernameError
     </label>
-</div>
-<div class="form-group">
-    <label>
-        Password:
-        <input @bind="password"/>
+
+    <div class="form-group row">
+        <label for="passwordInput" class="col-sm-2 col-form-label">
+            Password:
+        </label>
+
+        <div class="col-sm-10">
+            <input type="password" class="form-control" id="passwordInput" placeholder="Enter Password" @bind="password" />
+        </div>
+    </div>
+
+    <label style="height:30px;color:red">
+        @passwordError
     </label>
-</div>
-<div class="form-group">
-    <button class="btn btn-primary" @onclick="UserLogin" disabled="@disableButton">
-        Login
-    </button>
-</div>
+
+    <div class="form-group">
+        <button class="btn btn-primary" @onclick="UserLogin" disabled="@disableButton">
+            Login
+        </button>
+    </div>
+</card>
 
 @code {
     private string? username;
     private string? password;
+    private string? usernameError;
+    private string? passwordError;
     private bool disableButton = false;
 
     private async Task UserLogin()
     {
-        await jsRuntime.InvokeVoidAsync("console.log", "Rip");
-        if (username == null || password == null)
+        if (!validateInput())
         {
-            Console.WriteLine("rip");
             return;
         }
 
@@ -57,12 +74,8 @@
 
             if (response.IsSuccessStatusCode)
             {
-                await jsRuntime.InvokeVoidAsync("console.log", "Success");
+                await jsRuntime.InvokeVoidAsync("console.log", "Successfully logged in. Redirecting.");
                 Navigation.NavigateTo("/", true);
-            }
-            else
-            {
-                await jsRuntime.InvokeVoidAsync("console.log", response.StatusCode,response.ReasonPhrase);
             }
         }
         catch(Exception e)
@@ -73,5 +86,32 @@
 
         disableButton = false;
         StateHasChanged();
+    }
+
+    private bool validateInput()
+    {
+        bool valid = true;
+
+        if (username == null || username == "")
+        {
+            usernameError = "Username is invalid.";
+            valid = false;
+        }
+        else
+        {
+            usernameError = null;
+        }
+
+        if (password == null || password == "")
+        {
+            passwordError = "Password is invalid.";
+            valid = false;
+        }
+        else
+        {
+            passwordError = null;
+        }
+
+        return valid;
     }
 }

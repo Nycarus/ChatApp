@@ -53,7 +53,7 @@ namespace ChatApp.Controllers
                     return BadRequest();
                 }
 
-                Response.Cookies.Append("Chat-Access-Token", token, new CookieOptions() { HttpOnly = true, SameSite = SameSiteMode.Strict });
+                Response.Cookies.Append("Chat-Access-Token", token, new CookieOptions() { SameSite=SameSiteMode.None });
                 return Ok();
             }
             catch (Exception e) {
@@ -68,7 +68,8 @@ namespace ChatApp.Controllers
             try 
             {
                 _logger.LogInformation("Auth");
-                return Ok();
+                var token = Request.Cookies.SingleOrDefault(o => o.Key == "Chat-Access-Token");
+                return Ok(token.Value);
             } 
             catch (Exception e)
             {
