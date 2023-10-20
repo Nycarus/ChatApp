@@ -32,8 +32,8 @@ namespace ChatApp.API.Services
         {
             try
             {
-                var chatRooms = _dataContext.UserProfiles.Include(p => p.ChatRoomUsers).Single(o => o.Id == userProfileId);
-                return chatRooms.ChatRoomUsers.ToList();
+                var chatRooms = _dataContext.ChatRoomUsers.Include(p => p.ChatRoom).Where(o => o.UserProfileId == userProfileId);
+                return chatRooms.ToList();
             }
             catch (Exception e)
             {

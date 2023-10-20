@@ -54,6 +54,7 @@ builder.Services.AddResponseCompression(opts =>
 // Dependency Injection
 builder.Services.AddScoped<IUserServices, UserServices>();
 builder.Services.AddScoped<IChatServices, ChatServices>();
+builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 
 var app = builder.Build();
 

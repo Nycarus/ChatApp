@@ -11,13 +11,27 @@
 @using ChatApp.Client.Data
 @using Microsoft.AspNetCore.Http
 @using System.Net;
+@using Newtonsoft.Json
+@using ChatApp.DtoLibrary
 
 <PageTitle>Index</PageTitle>
 
 <div class="form-group">
-    <label>
-        Server:
-    </label>
+    <div class="dropdown">
+        <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            Servers
+        </button>
+        <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+            @foreach (ChatRoom chatRoom in chatRooms)
+            {
+                <a class="dropdown-item" @onclick="() => ChangeServers(chatRoom)">@chatRoom.roomName</a>
+            }
+        </div>
+    </div>
+
+    <div>
+        Current Chat Room: @currentServer?.roomName
+    </div>
 </div>
 <div class="form-group">
     <label>
@@ -35,9 +49,12 @@
 </div>
 
 <ul id="messagesList">
-    @foreach (string message in currentServer.messages)
+    @if (currentServer != null)
     {
-        <li>@message</li>
+        @foreach (string message in currentServer.messages)
+        {
+            <li>@message</li>
+        }
     }
 </ul>
 
@@ -69,6 +86,28 @@
         string token = response.Content.ReadAsStringAsync().Result;
 
         try {
+            var roomResponse = await httpClient.GetAsync($"{Configuration.GetSection("API").Value}/api/chat/rooms");
+
+            if (!roomResponse.IsSuccessStatusCode)
+            {
+                throw new Exception(roomResponse.StatusCode.ToString());
+            }
+
+            List<ChatRoomDTO> rooms = JsonConvert.DeserializeObject<List<ChatRoomDTO>>(await roomResponse.Content.ReadAsStringAsync());
+
+            foreach (ChatRoomDTO room in rooms)
+            {
+                chatRooms.Add(new ChatRoom
+                {
+                    roomId = room.Id,
+                    roomName = room.Name,
+                    roomDescription = room.Description
+                });
+            }
+
+            currentServer = chatRooms.FirstOrDefault();
+            StateHasChanged();
+
             hubConnection = new HubConnectionBuilder()
                 .WithUrl(url, options =>
                 {
@@ -103,6 +142,7 @@
         catch(Exception e)
         {
             errorMessage = e.Message;
+            stuff = e.Message;
         }
     }
 
@@ -120,5 +160,10 @@
         {
             await hubConnection.DisposeAsync();
         }
+    }
+
+    public void ChangeServers(ChatRoom chatRoom)
+    {
+        currentServer = chatRoom;
     }
 }
