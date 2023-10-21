@@ -9,12 +9,15 @@ namespace ChatApp.API.Services
 {
     public interface IChatServices
     {
-        public List<ChatRoomUsers> GetChatRooms(int userProfileId);
+        public List<ChatRoomUser> GetChatRooms(int userProfileId);
         public Task<bool> UserExists(int chatRoomId, int userProfileId);
 
         public Task<bool> AddUserToChatRoom(int chatroom, int userProfileId);
 
         public Task<bool> RemoveUserFromChatRoom(int chatRoomId, int userProfileId);
+        public Task<ChatRoom> CreateChatRoom(string name, string description);
+        public Task<ChatRoom> JoinChatRoom(int chatRoomId, int userProfileId);
+        public Task<bool> LeaveChatRoom(int chatRoomId, int userProfileId);
     }
     public class ChatServices : IChatServices
     {
@@ -28,7 +31,7 @@ namespace ChatApp.API.Services
         }
 
 
-        public List<ChatRoomUsers> GetChatRooms(int userProfileId)
+        public List<ChatRoomUser> GetChatRooms(int userProfileId)
         {
             try
             {
@@ -38,7 +41,7 @@ namespace ChatApp.API.Services
             catch (Exception e)
             {
                 _logger.LogInformation(e.Message);
-                return new List<ChatRoomUsers>();
+                return new List<ChatRoomUser>();
             }
         }
 
@@ -70,7 +73,7 @@ namespace ChatApp.API.Services
                     return false;
                 }
 
-                ChatRoomUsers chatRoomUsersModel = new ChatRoomUsers();
+                ChatRoomUser chatRoomUsersModel = new ChatRoomUser();
                 chatRoomUsersModel.UserProfileId = userProfileId;
                 chatRoomUsersModel.ChatRoomId = chatRoomId;
 
@@ -108,6 +111,95 @@ namespace ChatApp.API.Services
                 _logger.LogInformation(e.Message);
                 return false;
             }
+        }
+
+        public async Task<ChatRoom> CreateChatRoom(string name, string description)
+        {
+            try
+            {
+                ChatRoom chatRoom = new ChatRoom()
+                {
+                    Name = name,
+                    Description = description
+                };
+
+                await _dataContext.ChatRooms.AddAsync(chatRoom);
+                _dataContext.SaveChanges();
+
+                return chatRoom;
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e.Message);
+                return null; 
+            }
+        }
+
+        public async Task<ChatRoom> JoinChatRoom(int chatRoomId, int userProfileId)
+        {
+            try
+            {
+                var existingRoom = await _dataContext.ChatRooms.FindAsync(chatRoomId);
+
+                if (existingRoom == null)
+                {
+                    _logger.LogInformation("Room does not exists.");
+                    return null;
+                }
+
+                var existingUser = _dataContext.ChatRoomUsers.SingleOrDefault(o => o.ChatRoomId == chatRoomId && o.UserProfileId == userProfileId);
+
+                if (existingUser != null)
+                {
+                    _logger.LogInformation("User already exists in this room.");
+                    return null;
+                }
+
+                ChatRoomUser chatRoomUser = new ChatRoomUser()
+                {
+                    ChatRoomId = chatRoomId,
+                    UserProfileId = userProfileId
+                };
+
+                var result = _dataContext.ChatRoomUsers.Add(chatRoomUser);
+                _dataContext.SaveChanges();
+
+                if (result == null)
+                {
+                    return null;
+                }
+
+                return existingRoom;
+            }
+            catch(Exception e)
+            {
+                _logger.LogError(e.Message);
+                return null;
+            }
+        }
+
+        public async Task<bool> LeaveChatRoom(int chatRoomId, int userProfileId)
+        {
+            try
+            {
+                var existingUser = _dataContext.ChatRoomUsers.SingleOrDefault(o => o.ChatRoomId == chatRoomId && o.UserProfileId == userProfileId);
+
+                if (existingUser == null)
+                {
+                    _logger.LogInformation("User does not exists in this chatroom.");
+                    return false;
+                }
+
+                _dataContext.ChatRoomUsers.Remove(existingUser);
+
+                return true;
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return false;
+            }
+            
         }
     }
 }

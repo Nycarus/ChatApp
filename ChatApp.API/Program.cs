@@ -1,4 +1,5 @@
 using ChatApp.API.Services;
+using ChatApp.API.Utils;
 using ChatApp.Data;
 using ChatApp.Hubs;
 using ChatApp.Services;
@@ -8,11 +9,15 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddControllers();
+builder.Services.AddControllers().AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve;
+});
 builder.Services.AddDbContext<DataContext>(options => options.UseNpgsql(
     builder.Configuration.GetConnectionString("DefaultConnection"))
 );
@@ -55,6 +60,7 @@ builder.Services.AddResponseCompression(opts =>
 builder.Services.AddScoped<IUserServices, UserServices>();
 builder.Services.AddScoped<IChatServices, ChatServices>();
 builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+builder.Services.AddScoped<IUserContext, UserContext>();
 
 var app = builder.Build();
 

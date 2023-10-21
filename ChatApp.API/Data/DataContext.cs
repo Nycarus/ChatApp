@@ -40,6 +40,6 @@ namespace ChatApp.Data
         public DbSet<UserProfile> UserProfiles { get; set; }
 
         public DbSet<ChatRoom> ChatRooms { get; set; }
-        public DbSet<ChatRoomUsers> ChatRoomUsers { get; set;}
+        public DbSet<ChatRoomUser> ChatRoomUsers { get; set;}
     }
 }

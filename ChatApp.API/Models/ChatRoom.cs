@@ -8,6 +8,6 @@ namespace ChatApp.API.Models
         public string Name { get; set; }
         public string Description { get; set; }
 
-        public ICollection<ChatRoomUsers> ChatRoomUsers { get; set; } = new List<ChatRoomUsers>();
+        public ICollection<ChatRoomUser> ChatRoomUsers { get; set; } = new List<ChatRoomUser>();
     }
 }

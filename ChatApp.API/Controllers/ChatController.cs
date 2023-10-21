@@ -1,5 +1,7 @@
-﻿using ChatApp.API.Models;
+﻿using AutoMapper;
+using ChatApp.API.Models;
 using ChatApp.API.Services;
+using ChatApp.API.Utils;
 using ChatApp.DtoLibrary;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -13,13 +15,13 @@ namespace ChatApp.API.Controllers
     {
         private readonly ILogger<ChatController> _logger;
         private readonly IChatServices _chatServices;
-        private readonly IHttpContextAccessor _contextAccessor;
+        private readonly IUserContext _userContext;
 
-        public ChatController(ILogger<ChatController> logger, IChatServices chatServices, IHttpContextAccessor httpContextAccessor)
+        public ChatController(ILogger<ChatController> logger, IChatServices chatServices, IUserContext userContext)
         {
             _logger = logger;
             _chatServices = chatServices;
-            _contextAccessor = httpContextAccessor;
+            _userContext = userContext;
         }
 
         [Authorize]
@@ -28,25 +30,9 @@ namespace ChatApp.API.Controllers
         {
             try
             {
-                var user = _contextAccessor.HttpContext.User;
+                int userProfileClaim = _userContext.getUserProfileId();
 
-                if (user == null)
-                {
-                    throw new Exception("User does not exists.");
-                }
-
-                var userProfileClaim = user.FindFirst("UserProfileId");
-
-                if (userProfileClaim == null)
-                {
-                    throw new Exception("JWT user has raised an error.");
-                }
-                else if (!int.TryParse(userProfileClaim.Value, out _))
-                {
-                    throw new Exception("JWT user is not the correct type.");
-                }
-
-                List<ChatRoomUsers> chatRooms = _chatServices.GetChatRooms(Int32.Parse(userProfileClaim.Value));
+                List<ChatRoomUser> chatRooms = _chatServices.GetChatRooms(userProfileClaim);
 
                 List<ChatRoomDTO> chatRoomDtos = new List<ChatRoomDTO>();
 
@@ -60,7 +46,7 @@ namespace ChatApp.API.Controllers
                     });
                 }
 
-                return Ok(chatRooms);
+                return Ok(chatRoomDtos);
             }
             catch(Exception ex)
             {
@@ -68,6 +54,89 @@ namespace ChatApp.API.Controllers
                 return BadRequest(ex.Message);
             }
             
+        }
+
+        [Authorize]
+        [HttpPost("rooms")]
+        public async Task<IActionResult> CreateChatRoom(ChatRoomDTO chatRoomDTO)
+        {
+            try
+            {
+                int userProfileId = _userContext.getUserProfileId();
+
+                ChatRoom chatRoom = await _chatServices.CreateChatRoom(chatRoomDTO.Name, chatRoomDTO.Description);
+
+                if (chatRoom == null)
+                {
+                    throw new Exception("");
+                }
+
+                await _chatServices.JoinChatRoom(chatRoom.Id, userProfileId);
+
+                ChatRoomDTO newChatRoomDTO = new ChatRoomDTO()
+                {
+                    Id = chatRoom.Id,
+                    Name = chatRoom.Name,
+                    Description = chatRoom.Description
+                };
+
+                return Ok(newChatRoomDTO);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e.Message, e);
+                return BadRequest(e.Message);
+            }
+        }
+
+        [Authorize]
+        [HttpPost("rooms/join")]
+        public async Task<IActionResult> JoinChatRoom(int chatRoomId)
+        {
+            try
+            {
+                int userProfileId = _userContext.getUserProfileId();
+
+                ChatRoom chatRoom = await _chatServices.JoinChatRoom(chatRoomId, userProfileId);
+
+                if (chatRoom == null)
+                {
+                    throw new Exception("User unable to join chatroom.");
+                }
+
+                ChatRoomDTO newChatRoomDTO = new ChatRoomDTO()
+                {
+                    Id = chatRoom.Id,
+                    Name = chatRoom.Name,
+                    Description = chatRoom.Description
+                };
+
+                return Ok(newChatRoomDTO);
+            }
+            catch(Exception e)
+            {
+                _logger.LogError(e.Message, e);
+                return BadRequest(e.Message);
+            }
+        }
+
+        [Authorize]
+        [HttpDelete("rooms/leave")]
+        public async Task<IActionResult> LeaveChatRoom(int chatRoomId)
+        {
+            try
+            {
+                int userProfileId = _userContext.getUserProfileId();
+
+                await _chatServices.LeaveChatRoom(chatRoomId, userProfileId);
+
+                return Ok();
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e.Message, e);
+                return BadRequest(e.Message);
+            }
         }
     }
 }

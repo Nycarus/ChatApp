@@ -11,6 +11,6 @@ namespace ChatApp.Models
         public User User { get; set; } = null!;
         public int UserId { get; set; }
 
-        public virtual ICollection<ChatRoomUsers> ChatRoomUsers { get; set; } = new List<ChatRoomUsers>();
+        public virtual ICollection<ChatRoomUser> ChatRoomUsers { get; set; } = new List<ChatRoomUser>();
     }
 }

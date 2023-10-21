@@ -4,9 +4,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ChatApp.API.Models
 {
-    public class ChatRoomUsers
+    public class ChatRoomUser
     {
-        [Key]
         public int Id { get; set; }
         public ChatRoom ChatRoom { get; set; } = null!;
         public int ChatRoomId { get; set; }
