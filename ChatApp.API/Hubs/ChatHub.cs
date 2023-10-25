@@ -30,7 +30,7 @@ namespace ChatApp.Hubs
             {
                 int userProfileId = _userContext.getUserProfileId();
 
-                _logger.LogInformation($"{userProfileId} has connected.");
+                _logger.LogInformation($"User Number {userProfileId} has connected.");
 
                 List<ChatRoomUser> chatRoomUsers = _chatServices.GetChatRooms(userProfileId);
 
@@ -51,11 +51,11 @@ namespace ChatApp.Hubs
             try
             {
                 int userProfileId = _userContext.getUserProfileId();
-
+                _logger.LogInformation($"User Number {userProfileId} has connected to {roomId}");
                 var result = await _chatServices.AddUserToChatRoom(roomId, userProfileId);
                 await this.Groups.AddToGroupAsync(Context.ConnectionId, roomId.ToString());
 
-                await this.Clients.Group(roomId.ToString()).SendAsync("NotificationMessage", roomId.ToString(), $"{Context.ConnectionId} has left the chat room.");
+                await this.Clients.Group(roomId.ToString()).SendAsync("NotificationMessage", roomId, $"{Context.ConnectionId} has left the chat room.");
             }
             catch(Exception e)
             {
@@ -67,9 +67,10 @@ namespace ChatApp.Hubs
             try
             {
                 int userProfileId = _userContext.getUserProfileId();
+                _logger.LogInformation($"User Number {userProfileId} has disconnected from {roomId}");
                 var result = await _chatServices.RemoveUserFromChatRoom(roomId, userProfileId);
                 await this.Groups.RemoveFromGroupAsync(Context.ConnectionId, roomId.ToString());
-                await this.Clients.Group(roomId.ToString()).SendAsync("NotificationMessage", roomId.ToString(), $"{Context.ConnectionId} has left the chat room.");
+                await this.Clients.Group(roomId.ToString()).SendAsync("NotificationMessage", roomId, $"{Context.ConnectionId} has left the chat room.");
             }
             catch(Exception e)
             {
@@ -78,12 +79,14 @@ namespace ChatApp.Hubs
            
         }
 
-        public async Task SendMessage(string message, int roomId)
+        public async Task SendMessage(int roomId, string message)
         {
             try
             {
+                
                 string userName = _userContext.getUsername();
-                await this.Clients.Group(roomId.ToString()).SendAsync("ReceiveMessage", roomId.ToString(), userName, message);
+                _logger.LogInformation($"Message: {roomId}, {userName}, {message}");
+                await this.Clients.Group(roomId.ToString()).SendAsync("ReceiveMessage", roomId, userName, message);
             }
             catch (Exception e)
             {

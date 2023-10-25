@@ -16,47 +16,70 @@
 
 <PageTitle>Index</PageTitle>
 
-<div class="form-group">
-    <div class="dropdown">
-        <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-            Servers
-        </button>
-        <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-            @foreach (ChatRoom chatRoom in chatRooms)
-            {
-                <a class="dropdown-item" @onclick="() => ChangeServers(chatRoom)">@chatRoom.roomName</a>
-            }
+
+<div class="row border rounded" style="width:90%;height:95vh;margin:auto">
+    <div class="col-4" style="border-right:2mm ridge rgba(106, 90, 255, .6);">
+        <nav id="sidbarMenu" class="collapse d-lg-block flex-column align-items-stretch" style="height:100%;">
+            <div class="position-sticky" style="overflow:hidden;">
+                <div style="height:50px;display:flex;justify-content:center;align-items:center;font-weight:600;font-size:20px;margin-top:1rem;">
+                    Chat Rooms
+                </div>
+
+                <hr />
+                <div class="list-group list-group-flush mt-4" style="overflow-y:hidden;overflow-x:hidden;display:flex;">
+                    @foreach (ChatRoom chatRoom in chatRooms)
+                    {
+                        <a class="dropdown-item border" @onclick="() => ChangeServers(chatRoom)" style="padding-top:10px;padding-bottom:10px;">
+                            @chatRoom.roomName
+                        </a>
+                    }
+                </div>
+
+                <div class="border-top" style="height:50px;display:flex;justify-content:center;align-items:center;font-weight:600;font-size:20px;margin-top:1rem;">
+
+                </div>
+            </div>
+        </nav>
+    </div>
+
+    <div class="col-8">
+        <div class="form-group row">
+            <div style="display:flex;align-items:center;height:50px;font-weight:bold;font-size:30px;">
+                 @currentServer?.roomName
+            </div>
         </div>
-    </div>
 
-    <div>
-        Current Chat Room: @currentServer?.roomName
-    </div>
-</div>
-<div class="form-group">
-    <label>
-        Message:
-        <input @bind="messageInput" size="50" />
-    </label>
-</div>
-<button @onclick="Send" disabled="@(hubConnection?.State == HubConnectionState.Connected ? false : true)">Send</button>
+        <hr>
 
-<hr>
+        <div class="form-group">
+            <label>
+                Message:
+                <input @bind="messageInput" size="50" />
+            </label>
+        </div>
+        <button @onclick="Send" disabled="@(hubConnection?.State == HubConnectionState.Connected ? false : true)">Send</button>
 
-<div>
-    @stuff
-    @errorMessage
-</div>
+        <hr>
 
-<ul id="messagesList">
-    @if (currentServer != null)
-    {
-        @foreach (string message in currentServer.messages)
+        @if(errorMessage != "" && errorMessage != null)
         {
-            <li>@message</li>
+            <div>
+                @errorMessage
+                <hr />
+            </div>
         }
-    }
-</ul>
+
+        <ul id="messagesList">
+            @if (currentServer != null)
+            {
+                @foreach (string message in currentServer.messages)
+                {
+                    <li>@message</li>
+                }
+            }
+        </ul>
+    </div>
+</div>
 
 
 @code {
@@ -116,13 +139,14 @@
                 .WithAutomaticReconnect()
                 .Build();
 
-            hubConnection.On<int, string, string>("ReceiveMessage", (roomId, user, message) =>
+            hubConnection.On<int, string, string>("ReceiveMessage", async (roomId, user, message) =>
             {
                 ChatRoom chatRoom = chatRooms.Find(o => o.roomId == roomId);
 
                 if (chatRoom != null)
                 {
-                    chatRoom.messages.Add($"{user}: ${message}");
+                    chatRoom.messages.Add($"{user}: {message}");
+                    StateHasChanged();
                 }
             });
 
@@ -132,7 +156,8 @@
 
                 if (chatRoom != null)
                 {
-                    chatRoom.messages.Add($"Notification - ${message}");
+                    chatRoom.messages.Add($"Notification - {message}");
+                    StateHasChanged();
                 }
             });
 
@@ -148,8 +173,9 @@
 
     private async Task Send()
     {
-        if (hubConnection is not null)
+        if (hubConnection is not null && messageInput != "" && messageInput != null)
         {
+            await jsRuntime.InvokeVoidAsync("console.log", "Sent Mesage", messageInput);
             await hubConnection.SendAsync("SendMessage", currentServer.roomId, messageInput);
         }
     }
@@ -165,5 +191,6 @@
     public void ChangeServers(ChatRoom chatRoom)
     {
         currentServer = chatRoom;
+        StateHasChanged();
     }
 }
