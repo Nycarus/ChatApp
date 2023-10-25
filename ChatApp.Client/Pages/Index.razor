@@ -18,8 +18,8 @@
 
 
 <div class="row border rounded" style="width:90%;height:95vh;margin:auto">
-    <div class="col-4" style="border-right:2mm ridge rgba(106, 90, 255, .6);">
-        <nav id="sidbarMenu" class="collapse d-lg-block flex-column align-items-stretch" style="height:100%;">
+    <div class="col-4 d-flex flex-column mb-3 mt-3" style="border-right:2mm ridge rgba(106, 90, 255, .6);">
+        <nav id="sidbarMenu" class="collapse d-lg-block flex-column align-items-stretch flex-grow-1">
             <div class="position-sticky" style="overflow:hidden;">
                 <div style="height:50px;display:flex;justify-content:center;align-items:center;font-weight:600;font-size:20px;margin-top:1rem;">
                     Chat Rooms
@@ -29,39 +29,29 @@
                 <div class="list-group list-group-flush mt-4" style="overflow-y:hidden;overflow-x:hidden;display:flex;">
                     @foreach (ChatRoom chatRoom in chatRooms)
                     {
-                        <a class="dropdown-item border" @onclick="() => ChangeServers(chatRoom)" style="padding-top:10px;padding-bottom:10px;">
+                        <a class=@(chatRoom.roomId == currentServer.roomId ? "dropdown-item border bg-secondary text-light" : "dropdown-item border") @onclick="() => ChangeServers(chatRoom)" style="padding-top:10px;padding-bottom:10px;">
                             @chatRoom.roomName
                         </a>
                     }
                 </div>
-
-                <div class="border-top" style="height:50px;display:flex;justify-content:center;align-items:center;font-weight:600;font-size:20px;margin-top:1rem;">
-
-                </div>
             </div>
         </nav>
+        <hr />
+        <button type="button" class="btn btn-primary w-95 pb-1"> Create New Chat Room </button>
     </div>
 
-    <div class="col-8">
+    <div class="col-8 d-flex flex-column mb-3 mt-3">
         <div class="form-group row">
-            <div style="display:flex;align-items:center;height:50px;font-weight:bold;font-size:30px;">
-                 @currentServer?.roomName
+            <div class="align-middle">
+                <p class="h3">
+                    @currentServer?.roomName
+                </p>
             </div>
         </div>
 
         <hr>
 
-        <div class="form-group">
-            <label>
-                Message:
-                <input @bind="messageInput" size="50" />
-            </label>
-        </div>
-        <button @onclick="Send" disabled="@(hubConnection?.State == HubConnectionState.Connected ? false : true)">Send</button>
-
-        <hr>
-
-        @if(errorMessage != "" && errorMessage != null)
+        @if(errorMessage != "")
         {
             <div>
                 @errorMessage
@@ -69,15 +59,23 @@
             </div>
         }
 
-        <ul id="messagesList">
+        <div id="messagesList" class="border rounded" style="flex: 1 1 0; display:flex; -webkit-flex-direction:column; overflow-y:scroll;overflow-wrap:break-word;">
             @if (currentServer != null)
             {
                 @foreach (string message in currentServer.messages)
                 {
-                    <li>@message</li>
+                    <div>@message</div>
                 }
             }
-        </ul>
+        </div>
+
+        <hr>
+
+        <div class="input-group">
+            <input @bind="messageInput" size="50" class="form-control" placeholder=@(currentServer != null ? $"Message {currentServer.roomName}" : "Send Message") />
+            <button type="button" class="btn btn-primary" @onclick="Send" disabled="@(hubConnection?.State == HubConnectionState.Connected ? false : true)">Send</button>
+        </div>
+        
     </div>
 </div>
 
@@ -86,9 +84,8 @@
     private HubConnection? hubConnection;
     private List<ChatRoom> chatRooms = new List<ChatRoom>();
     private ChatRoom currentServer = new ChatRoom();
-    private string? messageInput;
+    private string messageInput = "";
     private string errorMessage = "";
-    private string stuff;
 
     protected override async Task OnInitializedAsync()
     {
@@ -167,16 +164,15 @@
         catch(Exception e)
         {
             errorMessage = e.Message;
-            stuff = e.Message;
         }
     }
 
     private async Task Send()
     {
-        if (hubConnection is not null && messageInput != "" && messageInput != null)
+        if (hubConnection is not null && messageInput != "")
         {
-            await jsRuntime.InvokeVoidAsync("console.log", "Sent Mesage", messageInput);
             await hubConnection.SendAsync("SendMessage", currentServer.roomId, messageInput);
+            messageInput = "";
         }
     }
 
