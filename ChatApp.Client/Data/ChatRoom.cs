@@ -5,6 +5,6 @@
         public int roomId;
         public string roomName = null!;
         public string roomDescription = null!;
-        public List<string> messages = new List<string>();
+        public List<Message> messages = new List<Message>();
     }
 }

@@ -18,8 +18,8 @@
 
 
 <div class="row border rounded" style="width:90%;height:95vh;margin:auto">
-    <div class="col-4 d-flex flex-column mb-3 mt-3" style="border-right:2mm ridge rgba(106, 90, 255, .6);">
-        <nav id="sidbarMenu" class="collapse d-lg-block flex-column align-items-stretch flex-grow-1">
+    <div class="col-3 d-flex flex-column mb-3 mt-3" style="border-right:2mm ridge rgba(106, 90, 255, .6);">
+        <nav id="sidbarMenu" class="d-flex flex-column align-items-stretch flex-grow-1">
             <div class="position-sticky" style="overflow:hidden;">
                 <div style="height:50px;display:flex;justify-content:center;align-items:center;font-weight:600;font-size:20px;margin-top:1rem;">
                     Chat Rooms
@@ -40,7 +40,7 @@
         <button type="button" class="btn btn-primary w-95 pb-1"> Create New Chat Room </button>
     </div>
 
-    <div class="col-8 d-flex flex-column mb-3 mt-3">
+    <div class="col-9 d-flex flex-column mb-3 mt-3">
         <div class="form-group row">
             <div class="align-middle">
                 <p class="h3">
@@ -54,7 +54,9 @@
         @if(errorMessage != "")
         {
             <div>
-                @errorMessage
+                <p style="color:red;">
+                    @errorMessage
+                </p>
                 <hr />
             </div>
         }
@@ -62,9 +64,22 @@
         <div id="messagesList" class="border rounded" style="flex: 1 1 0; display:flex; -webkit-flex-direction:column; overflow-y:scroll;overflow-wrap:break-word;">
             @if (currentServer != null)
             {
-                @foreach (string message in currentServer.messages)
+                @foreach (Message message in currentServer.messages)
                 {
-                    <div>@message</div>
+                    <div class="d-flex flex-column border rounded p-2">
+                        <div class="d-flex flex-row align-items-center">
+                            <p class="h5 align-items-center fw-bold">
+                                @message.Username
+                            </p>
+                            <p class="h5 align-items-center ps-2" style="font-size:14px;">
+                                @message.Time
+                            </p>
+                            
+                        </div>
+                        <div>
+                            @message.Content
+                        </div>
+                    </div>
                 }
             }
         </div>
@@ -142,7 +157,12 @@
 
                 if (chatRoom != null)
                 {
-                    chatRoom.messages.Add($"{user}: {message}");
+                    chatRoom.messages.Add(new Message()
+                    {
+                        Username = user,
+                        Content = message,
+                        Time = DateTime.Now
+                    });
                     StateHasChanged();
                 }
             });
@@ -153,7 +173,11 @@
 
                 if (chatRoom != null)
                 {
-                    chatRoom.messages.Add($"Notification - {message}");
+                    chatRoom.messages.Add(new Message()
+                    {
+                        Username = "Notification",
+                        Content = message
+                    });
                     StateHasChanged();
                 }
             });
