@@ -20,20 +20,18 @@
 <div class="row border rounded" style="width:90%;height:95vh;margin:auto">
     <div class="col-3 d-flex flex-column mb-3 mt-3" style="border-right:2mm ridge rgba(106, 90, 255, .6);">
         <nav id="sidbarMenu" class="d-flex flex-column align-items-stretch flex-grow-1">
-            <div class="position-sticky" style="overflow:hidden;">
-                <div style="height:50px;display:flex;justify-content:center;align-items:center;font-weight:600;font-size:20px;margin-top:1rem;">
-                    Chat Rooms
-                </div>
+            <div style="height:50px;display:flex;justify-content:center;align-items:center;font-weight:600;font-size:20px;margin-top:1rem;">
+                Chat Rooms
+            </div>
 
-                <hr />
-                <div class="list-group list-group-flush mt-4" style="overflow-y:hidden;overflow-x:hidden;display:flex;">
-                    @foreach (ChatRoom chatRoom in chatRooms)
-                    {
-                        <a class=@(chatRoom.roomId == currentServer.roomId ? "dropdown-item border bg-secondary text-light" : "dropdown-item border") @onclick="() => ChangeServers(chatRoom)" style="padding-top:10px;padding-bottom:10px;">
-                            @chatRoom.roomName
-                        </a>
-                    }
-                </div>
+            <hr />
+            <div class="d-flex flex-column mt-4" style="overflow-x:hidden;overflow-y:scroll;flex: 1 1 0;">
+                @foreach (ChatRoom chatRoom in chatRooms)
+                {
+                    <a class=@(chatRoom.roomId == currentServer.roomId ? "dropdown-item border bg-secondary text-light" : "dropdown-item border") @onclick="() => ChangeServers(chatRoom)" style="padding-top:10px;padding-bottom:10px;">
+                        @chatRoom.roomName
+                    </a>
+                }
             </div>
         </nav>
         <hr />
