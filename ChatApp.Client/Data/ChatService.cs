@@ -2,12 +2,15 @@
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using System.Net.Http;
+using System.Xml.Linq;
 
 namespace ChatApp.Client.Data
 {
     public interface IChatService
     {
         public Task<List<ChatRoom>> GetRoomList();
+        public Task<ChatRoom> CreateNewRoom(string name, string description);
+        public Task<ChatRoom> JoinChatRoom(int roomId);
     }
     public class ChatService : IChatService
     {
@@ -59,6 +62,34 @@ namespace ChatApp.Client.Data
 
             HttpClient httpClient = _httpClientFactory.CreateClient("ChatAppApi");
             var roomResponse = await httpClient.PostAsync($"{_configuration.GetSection("API").Value}/api/chat/rooms", data);
+
+            if (roomResponse.IsSuccessStatusCode)
+            {
+                ChatRoomDTO newChatRoomDTO = JsonConvert.DeserializeObject<ChatRoomDTO>(await roomResponse.Content.ReadAsStringAsync());
+
+                ChatRoom room = new ChatRoom()
+                {
+                    roomId = newChatRoomDTO.Id,
+                    roomName = newChatRoomDTO.Name,
+                    roomDescription = newChatRoomDTO.Description
+                };
+
+                return room;
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        public async Task<ChatRoom> JoinChatRoom(int chatRoomId)
+        {
+
+
+            var data = new StringContent(JsonConvert.SerializeObject(chatRoomId), System.Text.Encoding.UTF8, "application/json");
+
+            HttpClient httpClient = _httpClientFactory.CreateClient("ChatAppApi");
+            var roomResponse = await httpClient.PostAsync($"{_configuration.GetSection("API").Value}/api/chat/rooms/join", data);
 
             if (roomResponse.IsSuccessStatusCode)
             {

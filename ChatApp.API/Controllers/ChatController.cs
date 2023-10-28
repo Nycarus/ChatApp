@@ -91,7 +91,7 @@ namespace ChatApp.API.Controllers
 
         [Authorize]
         [HttpPost("rooms/join")]
-        public async Task<IActionResult> JoinChatRoom(int chatRoomId)
+        public async Task<IActionResult> JoinChatRoom([FromBody] int chatRoomId)
         {
             try
             {
@@ -122,7 +122,7 @@ namespace ChatApp.API.Controllers
 
         [Authorize]
         [HttpDelete("rooms/leave")]
-        public async Task<IActionResult> LeaveChatRoom(int chatRoomId)
+        public async Task<IActionResult> LeaveChatRoom([FromBody] int chatRoomId)
         {
             try
             {

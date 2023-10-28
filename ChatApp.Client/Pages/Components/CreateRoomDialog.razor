@@ -1,0 +1,121 @@
+﻿@using ChatApp.Client.Data
+@inject IChatService ChatService
+
+<button type="button" class="btn btn-primary w-95 my-1" @onclick="toggleDisplayModal"> Create New Chat Room </button>
+
+<div class="modal" id="createRoomModal" tabindex="-1" role="dialog" aria-labelledby="createRoomModalLabel" aria-hidden="true" style="display:@(toggleModal ? "initial" : "none");">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Modal title</h5>
+                <button type="button" class="btn-close" @onclick="toggleDisplayModal">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="roomNameInput" class="col-form-label">
+                        Room Name:
+                    </label>
+
+                    <div class="col-sm-10">
+                        <input class="form-control" id="roomNameInput" placeholder="Enter Room Name" @bind="name" />
+                    </div>
+                </div>
+
+                <label style="height:30px;color:red">
+                    @nameError
+                </label>
+
+                <div class="form-group">
+                    <label for="descriptionInput" class="col-form-label">
+                        Description:
+                    </label>
+
+                    <div class="col-sm-10">
+                        <input class="form-control" id="descriptionInput" placeholder="Enter Description" @bind="description" />
+                    </div>
+                </div>
+
+                <label style="height:30px;color:red">
+                    @descriptionError
+                </label>
+
+                <label style="height:30px;color:red">
+                    @error
+                </label>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" @onclick="CreateRoom">Create Room</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    string name = "";
+    string description = "";
+    string nameError = "";
+    string descriptionError = "";
+    string error = "";
+    bool toggleModal = false;
+
+    [Parameter] public EventCallback<ChatRoom> CreateRoomCallback { get; set; }
+
+    protected async void CreateRoom()
+    {
+        if (!validateInput())
+        {
+            StateHasChanged();
+            return;
+        }
+
+        ChatRoom result = await ChatService.CreateNewRoom(name, description);
+
+        if (result == null)
+        {
+            error = "Unable to create new room.";
+            StateHasChanged();
+            return;
+        }
+
+        await CreateRoomCallback.InvokeAsync(result);
+
+        toggleDisplayModal();
+        StateHasChanged();
+    }
+
+    protected void toggleDisplayModal()
+    {
+        toggleModal = !toggleModal;
+    }
+
+    private bool validateInput()
+    {
+        bool valid = true;
+
+        if (name == "")
+        {
+            nameError = "Enter valid name.";
+            valid = false;
+        }
+        else
+        {
+            descriptionError = "";
+        }
+
+        if (description == "")
+        {
+            descriptionError = "Enter valid description.";
+            valid = false;
+        }
+        else
+        {
+            descriptionError = "";
+        }
+
+        return valid;
+    }
+}

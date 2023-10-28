@@ -70,7 +70,7 @@ namespace ChatApp.API.Services
                 if (await UserExists(chatRoomId, userProfileId))
                 {
                     _logger.LogInformation("User Already Exists.");
-                    return false;
+                    return true;
                 }
 
                 ChatRoomUser chatRoomUsersModel = new ChatRoomUser();

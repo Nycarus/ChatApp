@@ -15,6 +15,7 @@
 @using System.Net;
 @using Newtonsoft.Json
 @using ChatApp.DtoLibrary
+@using ChatApp.Client.Pages.Components
 
 <PageTitle>Index</PageTitle>
 
@@ -30,21 +31,30 @@
             <div class="d-flex flex-column mt-4" style="overflow-x:hidden;overflow-y:scroll;flex: 1 1 0;">
                 @foreach (ChatRoom chatRoom in chatRooms)
                 {
-                    <a class=@(chatRoom.roomId == currentServer.roomId ? "dropdown-item border bg-secondary text-light" : "dropdown-item border") @onclick="() => ChangeServers(chatRoom)" style="padding-top:10px;padding-bottom:10px;">
+                    <a class=@(chatRoom.roomId == currentServer?.roomId ? "dropdown-item border bg-secondary text-light" : "dropdown-item border") @onclick="() => ChangeServers(chatRoom)" style="padding-top:10px;padding-bottom:10px;">
                         @chatRoom.roomName
                     </a>
                 }
             </div>
         </nav>
         <hr />
-        <button type="button" class="btn btn-primary w-95 pb-1"> Create New Chat Room </button>
+        <CreateRoomDialog CreateRoomCallback="@JoinRoom"/>
+        <JoinRoomDialog JoinRoomCallback="@JoinRoom" />
     </div>
 
     <div class="col-9 d-flex flex-column mb-3 mt-3">
         <div class="form-group row">
             <div class="align-middle">
-                <p class="h3">
-                    @currentServer?.roomName
+                <div class="d-flex flex-row">
+                    <p class="h3">
+                        @currentServer?.roomName
+                    </p>
+                    <p class="h4 ms-2">
+                        (@currentServer?.roomId)
+                    </p>
+                </div>
+                <p class="h6">
+                    @currentServer?.roomDescription
                 </p>
             </div>
         </div>
@@ -71,10 +81,12 @@
                             <p class="h5 align-items-center fw-bold">
                                 @message.Username
                             </p>
-                            <p class="h5 align-items-center ps-2" style="font-size:14px;">
-                                @message.Time
-                            </p>
-                            
+                            @if (@message.Time != DateTime.MinValue)
+                            {
+                                <p class="h5 align-items-center ps-2" style="font-size:14px;">
+                                    @message.Time
+                                </p>
+                            }
                         </div>
                         <div>
                             @message.Content
@@ -192,5 +204,18 @@
     {
         currentServer = chatRoom;
         StateHasChanged();
+    }
+
+    public async Task JoinRoom(ChatRoom chatRoom)
+    {
+        if (hubConnection is not null && chatRoom != null)
+        {
+            if (chatRooms.Count == 0)
+            {
+                currentServer = chatRoom;
+            }
+            chatRooms.Add(chatRoom);
+            await hubConnection.SendAsync("ConnectToRoomAsync", chatRoom.roomId);
+        }
     }
 }
