@@ -31,9 +31,14 @@
             <div class="d-flex flex-column mt-4" style="overflow-x:hidden;overflow-y:scroll;flex: 1 1 0;">
                 @foreach (ChatRoom chatRoom in chatRooms)
                 {
-                    <a class=@(chatRoom.roomId == currentServer?.roomId ? "dropdown-item border bg-secondary text-light" : "dropdown-item border") @onclick="() => ChangeServers(chatRoom)" style="padding-top:10px;padding-bottom:10px;">
-                        @chatRoom.roomName
-                    </a>
+                    <div class="d-flex flex-row">
+                        <a class=@(chatRoom.roomId == currentServer?.roomId ? "dropdown-item border bg-secondary text-light" : "dropdown-item border") @onclick="() => ChangeServers(chatRoom)" style="padding-top:10px;padding-bottom:10px;text-overflow:ellipsis;display:flex;flex: 1 1 0;overflow:hidden;">
+                            @chatRoom.roomName
+                        </a>
+                        <button type="button" class="btn btn-outline-primary" @onclick="() => LeaveRoom(chatRoom)">
+                            &times;
+                        </button>
+                    </div>
                 }
             </div>
         </nav>
@@ -216,6 +221,22 @@
             }
             chatRooms.Add(chatRoom);
             await hubConnection.SendAsync("ConnectToRoomAsync", chatRoom.roomId);
+        }
+    }
+
+    public async Task LeaveRoom(ChatRoom chatRoom)
+    {
+        if (hubConnection is not null && chatRoom != null)
+        {
+            await hubConnection.SendAsync("DisconnectFromRoomAsync", chatRoom.roomId);
+
+            chatRooms.Remove(chatRoom);
+
+            if (chatRooms.Count > 0 && chatRoom.roomId == currentServer.roomId)
+            {
+
+                currentServer = chatRooms[0];
+            }
         }
     }
 }

@@ -71,7 +71,7 @@ namespace ChatApp.API.Controllers
                     throw new Exception("");
                 }
 
-                await _chatServices.JoinChatRoom(chatRoom.Id, userProfileId);
+                await _chatServices.AddUserToChatRoom(chatRoom.Id, userProfileId);
 
                 ChatRoomDTO newChatRoomDTO = new ChatRoomDTO()
                 {
@@ -97,12 +97,14 @@ namespace ChatApp.API.Controllers
             {
                 int userProfileId = _userContext.getUserProfileId();
 
-                ChatRoom chatRoom = await _chatServices.JoinChatRoom(chatRoomId, userProfileId);
+                bool result = await _chatServices.AddUserToChatRoom(chatRoomId, userProfileId);
 
-                if (chatRoom == null)
+                if (!result)
                 {
-                    throw new Exception("User unable to join chatroom.");
+                    throw new Exception("Unable to add user to chatroom.");
                 }
+
+                ChatRoom chatRoom = await _chatServices.GetChatRoom(chatRoomId);
 
                 ChatRoomDTO newChatRoomDTO = new ChatRoomDTO()
                 {
@@ -128,7 +130,7 @@ namespace ChatApp.API.Controllers
             {
                 int userProfileId = _userContext.getUserProfileId();
 
-                await _chatServices.LeaveChatRoom(chatRoomId, userProfileId);
+                await _chatServices.RemoveUserFromChatRoom(chatRoomId, userProfileId);
 
                 return Ok();
             }
