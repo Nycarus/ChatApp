@@ -9,7 +9,7 @@ Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-co
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChatApp.Client", "ChatApp.Client\ChatApp.Client.csproj", "{DC93BF2D-7741-41A5-A818-8DADA6F9B283}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DtoLibrary", "DtoLibrary\DtoLibrary.csproj", "{28A02047-4BCB-4A34-B110-971286A91883}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DtoLibrary", "DtoLibrary\DtoLibrary.csproj", "{28A02047-4BCB-4A34-B110-971286A91883}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.Net.Http.Headers;
 using System.Text;
 using System.Text.Json.Serialization;
 
@@ -50,6 +51,7 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddAuthorization();
 builder.Services.AddAutoMapper(typeof(Program).Assembly);
 builder.Services.AddSignalR();
+builder.Services.AddCors();
 builder.Services.AddResponseCompression(opts =>
 {
     opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(
@@ -72,7 +74,7 @@ if (!app.Environment.IsDevelopment())
     //app.UseHsts();
 }
 
-//app.UseHttpsRedirection();
+app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
@@ -86,5 +88,10 @@ app.MapControllerRoute(
 
 app.MapHub<ChatHub>("/signalr/hubs/chat");
 app.UseResponseCompression();
+
+app.UseCors(p => p
+    .AllowCredentials()
+    .AllowAnyMethod()
+    .WithHeaders(HeaderNames.ContentType, HeaderNames.AccessControlAllowOrigin, HeaderNames.AccessControlAllowCredentials));
 
 app.Run();

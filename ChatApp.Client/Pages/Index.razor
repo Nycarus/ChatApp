@@ -6,7 +6,9 @@
 @inject NavigationManager Navigation
 @inject IHttpContextAccessor HttpContextAccessor
 @inject IJSRuntime jsRuntime
-@inject IHttpClientFactory HttpClientFactory
+@inject IAuthenticationService AuthenticationService
+@inject IChatService ChatService
+@inject HttpClient HttpClient
 @using System.Security.Claims
 @using ChatApp.Client.Data
 @using Microsoft.AspNetCore.Http
@@ -102,54 +104,34 @@
 
     protected override async Task OnInitializedAsync()
     {
-        HttpClient httpClient = HttpClientFactory.CreateClient();
-        var response = await httpClient.GetAsync($"{Configuration.GetSection("API").Value}/api/user/auth");
+        string token = await AuthenticationService.GetUserSession();
 
-        if (!response.IsSuccessStatusCode)
+        if (token ==  "" || token == null)
         {
             Navigation.NavigateTo($"/login", true);
         }
 
-        string? url = Configuration.GetSection("ChatUrl").Value;
-        if (url == null)
+        string? chatUrl = Configuration.GetSection("ChatUrl").Value;
+        if (chatUrl == null)
         {
             return;
         }
 
-        string token = response.Content.ReadAsStringAsync().Result;
-
         try {
-            var roomResponse = await httpClient.GetAsync($"{Configuration.GetSection("API").Value}/api/chat/rooms");
-
-            if (!roomResponse.IsSuccessStatusCode)
-            {
-                throw new Exception(roomResponse.StatusCode.ToString());
-            }
-
-            List<ChatRoomDTO> rooms = JsonConvert.DeserializeObject<List<ChatRoomDTO>>(await roomResponse.Content.ReadAsStringAsync());
-
-            foreach (ChatRoomDTO room in rooms)
-            {
-                chatRooms.Add(new ChatRoom
-                {
-                    roomId = room.Id,
-                    roomName = room.Name,
-                    roomDescription = room.Description
-                });
-            }
+            chatRooms = await ChatService.GetRoomList();
 
             currentServer = chatRooms.FirstOrDefault();
             StateHasChanged();
 
             hubConnection = new HubConnectionBuilder()
-                .WithUrl(url, options =>
+                .WithUrl(chatUrl, options =>
                 {
                     options.AccessTokenProvider = () => Task.FromResult(token);
                 })
                 .WithAutomaticReconnect()
                 .Build();
 
-            hubConnection.On<int, string, string>("ReceiveMessage", async (roomId, user, message) =>
+            hubConnection.On<int, string, string>("ReceiveMessage", (roomId, user, message) =>
             {
                 ChatRoom chatRoom = chatRooms.Find(o => o.roomId == roomId);
 

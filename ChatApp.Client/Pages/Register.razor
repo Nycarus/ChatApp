@@ -6,13 +6,15 @@
 @inject IJSRuntime jsRuntime
 @inject IConfiguration Configuration
 
-@page "/login"
+@page "/register"
 
-<PageTitle>Login</PageTitle>
+<PageTitle>Register</PageTitle>
+
 <card class="card text-center" style="width:80%;min-width:500px;padding:50px;margin:auto;">
     <h3 class="m-auto p-3">
-        Login
+        Register
     </h3>
+
     <div class="form-group row">
         <label for="usernameInput" class="col-sm-2 col-form-label">
             Username:
@@ -41,26 +43,37 @@
         @passwordError
     </label>
 
-    <div class="d-flex flex-row flex-grow-1 justify-content-between">
-        <a href="/register" class="link-primary">Don't have an account? Register</a>
+    <div class="form-group row">
+        <label for="passwordConfirmInput" class="col-sm-2 col-form-label">
+            Re-enter Password:
+        </label>
 
-        <div class="form-group">
-            <button class="btn btn-primary" @onclick="UserLogin" disabled="@disableButton">
-                Login
-            </button>
+        <div class="col-sm-10">
+            <input type="password" class="form-control" id="passwordConfirmInput" placeholder="Enter Password Again" @bind="passwordConfirm" />
         </div>
     </div>
-    
+
+    <label style="height:30px;color:red">
+        @passwordConfirmError
+    </label>
+
+    <div class="form-group">
+        <button class="btn btn-primary" @onclick="UserRegister" disabled="@disableButton">
+            Register
+        </button>
+    </div>
 </card>
 
 @code {
-    private string? username;
-    private string? password;
-    private string? usernameError;
-    private string? passwordError;
+    private string username = "";
+    private string password = "";
+    private string passwordConfirm = "";
+    private string usernameError = "";
+    private string passwordError = "";
+    private string passwordConfirmError = "";
     private bool disableButton = false;
 
-    private async Task UserLogin()
+    private async Task UserRegister()
     {
         if (!validateInput())
         {
@@ -72,15 +85,15 @@
 
         try
         {
-            bool result = await AuthenticationService.Login(username, password);
+            bool result = await AuthenticationService.Register(username, password);
 
             if (result)
             {
-                await jsRuntime.InvokeVoidAsync("console.log", "Successfully logged in. Redirecting.");
-                Navigation.NavigateTo("/", true);
+                await jsRuntime.InvokeVoidAsync("console.log", "Register successful. Redirecting.");
+                Navigation.NavigateTo("/login", true);
             }
         }
-        catch(Exception e)
+        catch (Exception e)
         {
             await jsRuntime.InvokeVoidAsync("console.log", e.Message);
         }
@@ -94,24 +107,38 @@
     {
         bool valid = true;
 
-        if (username == null || username == "")
+        if (username == "")
         {
             usernameError = "Username is invalid.";
             valid = false;
         }
         else
         {
-            usernameError = null;
+            usernameError = "";
         }
 
-        if (password == null || password == "")
+        if (password == "")
         {
             passwordError = "Password is invalid.";
             valid = false;
         }
         else
         {
-            passwordError = null;
+            passwordError = "";
+        }
+
+        if (passwordConfirm == "")
+        {
+            passwordConfirmError = "Password is invalid.";
+            valid = false;
+        }
+        else if (passwordConfirm != password)
+        {
+            passwordConfirmError = "Password does not match.";
+        }
+        else
+        {
+            passwordConfirmError = "";
         }
 
         return valid;

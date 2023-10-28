@@ -53,7 +53,7 @@ namespace ChatApp.Controllers
                     return BadRequest();
                 }
 
-                Response.Cookies.Append("Chat-Access-Token", token, new CookieOptions() { SameSite=SameSiteMode.None });
+                Response.Cookies.Append("Chat-Access-Token", token, new CookieOptions() { SameSite=SameSiteMode.None, HttpOnly=true, IsEssential=true });
                 return Ok();
             }
             catch (Exception e) {
