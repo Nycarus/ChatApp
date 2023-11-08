@@ -11,28 +11,17 @@ services:
         - postgres
     ports:
         - "5000:5000"
+        - "5001:5001"
     environment:
-        ASPNETCORE_URLS: "http://+:5000"
+        ASPNETCORE_URLS: "https://+:5001;http://+:5000"
         ASPNETCORE_ENVIRONMENT: "Development"
+        ASPNETCORE_HTTPS_PORT: "8001"
+        ASPNETCORE_Kestrel__Certificates__Default__Password: ${CERT_PASSWORD}
+        ASPNETCORE_Kestrel__Certificates__Default__Path: "/https/aspnetapp.pfx"
     networks:
         - chatapp-network
-
-  chatapp_client:
-    container_name: ChatApp_Client
-    image: chatapp_client
-    build:
-        context: .
-        dockerfile: ChatApp.Client/Dockerfile
-    depends_on:
-        - postgres
-        - chatapp_api
-    ports:
-        - "4000:4000"
-    environment:
-        ASPNETCORE_URLS: "http://+:4000"
-        ASPNETCORE_ENVIRONMENT: "Development"
-    networks:
-        - chatapp-network
+    volumes:
+      - ~/.aspnet/https:/https/
 
   postgres:
     container_name: chatapp_postgres

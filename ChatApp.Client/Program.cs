@@ -1,47 +1,26 @@
-using Chatapp.Client.Data;
 using ChatApp.Client.Data;
+using ChatApp.Client;
+using Microsoft.AspNetCore.Components.Web;
+using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using ChatApp.Client.Extensions;
-using Microsoft.Net.Http.Headers;
+using System.Net;
+using System.Net.Http;
 
-var builder = WebApplication.CreateBuilder(args);
+var builder = WebAssemblyHostBuilder.CreateDefault(args);
+builder.RootComponents.Add<App>("#app");
+builder.RootComponents.Add<HeadOutlet>("head::after");
 
-// Add services to the container.
-builder.Services.AddSession();
-builder.Services.AddSignalR();
-//builder.Services.AddCors();
-builder.Services.AddRazorPages();
-builder.Services.AddServerSideBlazor();
-builder.Services.AddSingleton<WeatherForecastService>();
-builder.Services.AddHttpContextAccessor();
-builder.Services.AddScoped<HandlerData>();
-builder.Services.AddTransient<HeaderHandler>();
-builder.Services.AddTransient<IAuthenticationService, AuthenticationService>();
-builder.Services.AddTransient<IChatService, ChatService>();
+builder.Services
+    .AddTransient<CookieHandler>()
+    .AddScoped(sp => sp
+        .GetRequiredService<IHttpClientFactory>()
+        .CreateClient("API"))
+    .AddHttpClient("API", client => client.BaseAddress = new Uri(builder.HostEnvironment.BaseAddress)).AddHttpMessageHandler<CookieHandler>();
 
-builder.Services.AddHttpClient("ChatAppApi", c =>
-{
-    c.BaseAddress = new Uri(builder.Configuration["API"]);
-}).AddHttpMessageHandler<HeaderHandler>();
+builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
+builder.Services.AddScoped<IChatService, ChatService>();
 
-builder.Logging.SetMinimumLevel(LogLevel.Information);
 
-var app = builder.Build();
+builder.Services.AddAuthorizationCore();
 
-// Configure the HTTP request pipeline.
-if (!app.Environment.IsDevelopment())
-{
-    app.UseExceptionHandler("/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-    //app.UseHsts();
-}
-
-app.UseHttpsRedirection();
-app.UseSession();
-app.UseStaticFiles();
-
-app.UseRouting();
-
-app.MapBlazorHub();
-app.MapFallbackToPage("/_Host");
-
-app.Run();
+await builder.Build().RunAsync();

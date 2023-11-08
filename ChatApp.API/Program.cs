@@ -15,7 +15,8 @@ using System.Text.Json.Serialization;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddControllers().AddJsonOptions(options =>
+builder.Services.AddRazorPages();
+builder.Services.AddControllersWithViews().AddJsonOptions(options =>
 {
     options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve;
 });
@@ -79,19 +80,24 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+app.MapControllers();
+app.MapRazorPages();
+app.UseBlazorFrameworkFiles();
+app.UseWebAssemblyDebugging();
+app.MapFallbackToFile("index.html");
+
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapControllerRoute(
-    name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.MapHub<ChatHub>("/signalr/hubs/chat");
 app.UseResponseCompression();
 
 app.UseCors(p => p
-    .AllowCredentials()
+    .AllowAnyHeader()
     .AllowAnyMethod()
+    .SetIsOriginAllowed(options => true)
+    .AllowCredentials()
     .WithHeaders(HeaderNames.ContentType, HeaderNames.AccessControlAllowOrigin, HeaderNames.AccessControlAllowCredentials));
 
 app.Run();

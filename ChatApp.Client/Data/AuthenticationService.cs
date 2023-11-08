@@ -1,8 +1,5 @@
 ﻿using ChatApp.DtoLibrary;
-using Microsoft.Extensions.Configuration;
-using Microsoft.JSInterop;
 using Newtonsoft.Json;
-using System.Net.Http;
 
 namespace ChatApp.Client.Data
 {
@@ -15,11 +12,11 @@ namespace ChatApp.Client.Data
     }
     public class AuthenticationService : IAuthenticationService
     {
-        private readonly IHttpClientFactory _httpClientFactory;
+        private readonly HttpClient _httpClient;
         private readonly IConfiguration _configuration;
-        public AuthenticationService(IHttpClientFactory httpClientFactory, IConfiguration configuration)
+        public AuthenticationService(HttpClient httpClient, IConfiguration configuration)
         {
-            _httpClientFactory = httpClientFactory;
+            _httpClient = httpClient;
             _configuration = configuration;
         }
 
@@ -31,9 +28,9 @@ namespace ChatApp.Client.Data
                 Password = password
             };
 
-            HttpClient httpClient = _httpClientFactory.CreateClient("ChatAppApi");
             var data = new StringContent(JsonConvert.SerializeObject(loginDTO), System.Text.Encoding.UTF8, "application/json");
-            var response = await httpClient.PostAsync($"{_configuration.GetSection("API").Value}/api/user/login", data);
+            var response = await _httpClient.PostAsync($"{_configuration.GetSection("API").Value}/api/user/login", data);
+
 
             return response.IsSuccessStatusCode;
         }
@@ -46,17 +43,15 @@ namespace ChatApp.Client.Data
                 Password = password
             };
 
-            HttpClient httpClient = _httpClientFactory.CreateClient("ChatAppApi");
             var data = new StringContent(JsonConvert.SerializeObject(registerDTO), System.Text.Encoding.UTF8, "application/json");
-            var response = await httpClient.PostAsync($"{_configuration.GetSection("API").Value}/api/user/register", data);
+            var response = await _httpClient.PostAsync($"{_configuration.GetSection("API").Value}/api/user/register", data);
 
             return response.IsSuccessStatusCode;
         }
 
         public async Task<string> GetUserSession()
         {
-            HttpClient httpClient = _httpClientFactory.CreateClient("ChatAppApi");
-            var response = await httpClient.GetAsync($"{_configuration.GetSection("API").Value}/api/user/auth");
+            var response = await _httpClient.GetAsync($"{_configuration.GetSection("API").Value}/api/user/auth");
 
             if (response.IsSuccessStatusCode)
             {

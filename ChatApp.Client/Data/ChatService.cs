@@ -1,8 +1,5 @@
 ﻿using ChatApp.DtoLibrary;
-using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
-using System.Net.Http;
-using System.Xml.Linq;
 
 namespace ChatApp.Client.Data
 {
@@ -14,20 +11,19 @@ namespace ChatApp.Client.Data
     }
     public class ChatService : IChatService
     {
-        private readonly IHttpClientFactory _httpClientFactory;
+        private readonly HttpClient _httpClient;
         private readonly ILogger<ChatService> _logger;
         private readonly IConfiguration _configuration;
 
-        public ChatService(IHttpClientFactory httpClientFactory, ILogger<ChatService> logger, IConfiguration configuration)
+        public ChatService(HttpClient httpClient, ILogger<ChatService> logger, IConfiguration configuration)
         {
-            _httpClientFactory = httpClientFactory;
+            _httpClient = httpClient;
             _logger = logger;
             _configuration = configuration;
         }
         public async Task<List<ChatRoom>> GetRoomList()
         {
-            HttpClient httpClient = _httpClientFactory.CreateClient("ChatAppApi");
-            var roomResponse = await httpClient.GetAsync($"{_configuration.GetSection("API").Value}/api/chat/rooms");
+            var roomResponse = await _httpClient.GetAsync($"{_configuration.GetSection("API").Value}/api/chat/rooms");
 
             if (!roomResponse.IsSuccessStatusCode)
             {
@@ -60,8 +56,7 @@ namespace ChatApp.Client.Data
 
             var data = new StringContent(JsonConvert.SerializeObject(chatRoomDTO), System.Text.Encoding.UTF8, "application/json");
 
-            HttpClient httpClient = _httpClientFactory.CreateClient("ChatAppApi");
-            var roomResponse = await httpClient.PostAsync($"{_configuration.GetSection("API").Value}/api/chat/rooms", data);
+            var roomResponse = await _httpClient.PostAsync($"{_configuration.GetSection("API").Value}/api/chat/rooms", data);
 
             if (roomResponse.IsSuccessStatusCode)
             {
@@ -88,8 +83,7 @@ namespace ChatApp.Client.Data
 
             var data = new StringContent(JsonConvert.SerializeObject(chatRoomId), System.Text.Encoding.UTF8, "application/json");
 
-            HttpClient httpClient = _httpClientFactory.CreateClient("ChatAppApi");
-            var roomResponse = await httpClient.PostAsync($"{_configuration.GetSection("API").Value}/api/chat/rooms/join", data);
+            var roomResponse = await _httpClient.PostAsync($"{_configuration.GetSection("API").Value}/api/chat/rooms/join", data);
 
             if (roomResponse.IsSuccessStatusCode)
             {
